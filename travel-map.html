@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Martijn's Travel Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #000080;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+        }
+
+        .legend {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .visited {
+            background-color: #4CAF50;
+        }
+
+        .not-visited {
+            background-color: #e2e8f0;
+        }
+
+        .territory {
+            background-color: #FFA500;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 1rem;
+            color: #4a5568;
+        }
+
+        .stats p {
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Martijn's Travel Map</h1>
+        <div id="map"></div>
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color visited"></div>
+                <span>Countries Visited</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color territory"></div>
+                <span>Territories/Dependencies Visited</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color not-visited"></div>
+                <span>Not Visited</span>
+            </div>
+        </div>
+        <div class="stats">
+            <p>Countries visited: <span id="countryCount">0</span></p>
+            <p>Territories visited: <span id="territoryCount">0</span></p>
+            <p>Total locations: <span id="totalCount">0</span></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([20, 0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Special territories and their coordinates
+        const territories = {
+            "Gibraltar": [36.1408, -5.3536],
+            "Guadeloupe": [16.2650, -61.5510],
+            "Hong Kong": [22.3193, 114.1694],
+            "Macau": [22.1987, 113.5439],
+            "Martinique": [14.6415, -61.0242],
+            "Monaco": [43.7384, 7.4246],
+            "Montserrat": [16.7425, -62.1874]
+        };
+
+        // List of visited countries (adjusted names to match GeoJSON)
+        const visitedCountries = [
+            "Argentina",
+            "Australia",
+            "Austria",
+            "Bahrain",
+            "Barbados",
+            "Belgium",
+            "Belize",
+            "Brazil",
+            "Bulgaria",
+            "Burundi",
+            "Cambodia",
+            "Canada",
+            "Cape Verde",
+            "Chile",
+            "Colombia",
+            "Democratic Republic of the Congo",
+            "Costa Rica",
+            "Croatia",
+            "Cuba",
+            "Czech Republic",
+            "Denmark",
+            "Dominica",
+            "Dominican Republic",
+            "El Salvador",
+            "Estonia",
+            "Finland",
+            "France",
+            "Germany",
+            "Greece",
+            "Grenada",
+            "Hungary",
+            "India",
+            "Indonesia",
+            "Ireland",
+            "Israel",
+            "Italy",
+            "Japan",
+            "Kenya",
+            "South Korea",
+            "Latvia",
+            "Lithuania",
+            "Luxembourg",
+            "Malaysia",
+            "Malta",
+            "Mexico",
+            "Morocco",
+            "Netherlands",
+            "Norway",
+            "Panama",
+            "Papua New Guinea",
+            "Poland",
+            "Portugal",
+            "Romania",
+            "Rwanda",
+            "Saint Lucia",
+            "Saint Vincent and the Grenadines",
+            "Saudi Arabia",
+            "Singapore",
+            "Slovakia",
+            "South Africa",
+            "Spain",
+            "Sri Lanka",
+            "Sweden",
+            "Switzerland",
+            "Tanzania",
+            "Thailand",
+            "Turkey",
+            "Uganda",
+            "United Arab Emirates",
+            "United Kingdom",
+            "United States of America",
+            "Vietnam",
+            "Zimbabwe"
+        ];
+
+        // Add GeoJSON layer for countries
+        fetch('https://raw.githubusercontent.com/johan/world.geo.json/master/countries.geo.json')
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: function(feature) {
+                        const countryName = feature.properties.name;
+                        const isVisited = visitedCountries.includes(countryName);
+                        return {
+                            fillColor: isVisited ? '#4CAF50' : '#e2e8f0',
+                            weight: 1,
+                            color: '#666',
+                            fillOpacity: 0.7
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        const countryName = feature.properties.name;
+                        layer.bindPopup(countryName);
+                    }
+                }).addTo(map);
+
+                // Add markers for territories
+                for (const [territory, coords] of Object.entries(territories)) {
+                    const marker = L.circle(coords, {
+                        color: '#FFA500',
+                        fillColor: '#FFA500',
+                        fillOpacity: 0.7,
+                        radius: 50000
+                    }).addTo(map);
+                    marker.bindPopup(territory);
+                }
+
+                // Update counts
+                document.getElementById('countryCount').textContent = visitedCountries.length;
+                document.getElementById('territoryCount').textContent = Object.keys(territories).length;
+                document.getElementById('totalCount').textContent = visitedCountries.length + Object.keys(territories).length;
+            });
+    </script>
+</body>
+</html> 

@@ -1,19 +1,24 @@
-# Todo List App
+# Travel Map Visualization
 
-A simple, elegant todo list application built with HTML, CSS, and JavaScript. Features include:
-- Add new tasks
-- Mark tasks as complete
-- Delete tasks
-- Persistent storage using localStorage
-- Responsive design
-- Modern UI with animations
-
-## Live Demo
-You can try the app here: [Todo List App](https://[your-username].github.io/todo-list-app)
+An interactive web-based visualization of visited countries and territories using Leaflet.js and OpenStreetMap.
 
 ## Features
-- Clean, modern interface
-- Mobile-responsive design
-- Local storage for task persistence
-- Smooth animations and transitions
-- Cross-browser compatible 
+- Interactive world map showing visited countries and territories
+- Color-coded visualization (green for visited countries, orange for territories)
+- Statistics showing total number of visited locations
+- Responsive design that works on both desktop and mobile devices
+
+## Setup
+1. Clone this repository
+2. Open `travel-map.html` in a web browser
+3. No additional setup required - the map uses CDN-hosted dependencies
+
+## Technologies Used
+- HTML5
+- CSS3
+- JavaScript
+- Leaflet.js
+- OpenStreetMap
+
+## License
+MIT License 
